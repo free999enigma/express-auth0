@@ -21,8 +21,8 @@ async function requiresValidLogoutToken(req, res, next) {
       logoutToken,
       JWKS,
       {
-        issuer: process.env.ISSUER_BASE_URL + '/',
-        audience: process.env.CLIENT_ID,
+        issuer: process.env.AUTH0_ISSUER_BASE_URLL + '/',
+        audience: process.env.AUTH0_CLIENT_ID,
         typ: 'JWT',
         maxTokenAge: '2 minutes',
       }
