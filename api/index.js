@@ -24,7 +24,7 @@ app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
 
-const config = {
+const config = { 
   authRequired: false,
   auth0Logout: true,
   clientID: process.env.AUTH0_CLIENT_ID,
