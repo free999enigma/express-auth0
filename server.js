@@ -21,13 +21,7 @@ const config = {
   authRequired: false,
   auth0Logout: true,
   baseURL: process.env.BASE_URL || 'http://localhost:3000' // Ensure this is set
-
 };
-
-// Base URL fallback for development
-if (!config.baseURL && process.env.PORT && process.env.NODE_ENV !== 'production') {
-  config.baseURL = `http://localhost:${process.env.PORT || 3000}`;
-}
 
 app.use(auth(config));
 
@@ -53,6 +47,27 @@ app.use(function (err, req, res, next) {
     error: process.env.NODE_ENV !== 'production' ? err : {}
   });
 });
+
+console.log('BASE_URL:', process.env.BASE_URL);
+console.log('PORT:', process.env.PORT);
+
+// Handle uncaught exceptions and rejections
+process.on('uncaughtException', (err) => {
+  console.error('There was an uncaught error', err);
+  process.exit(1); // Optional, forces the app to exit
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Conditionally listen if running locally
+if (require.main === module) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+}
 
 // Export as a Vercel-compatible function
 module.exports = app;
