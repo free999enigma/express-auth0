@@ -38,16 +38,7 @@ const config = {
 app.use(auth(config));
 
 // Middleware to make the `user` object available for all views
-app.use((req, res, next) => {
-  console.log('Processing request for', req.url);
-  if (req.oidc && req.oidc.user) {
-    console.log(`Authenticated user: ${req.oidc.user.email}`);
-  } else {
-    console.log('No authenticated user');
-  }
-  res.locals.user = req.oidc ? req.oidc.user : null;
-  next();
-});
+app.use(function (req, res, next) { res.locals.user = req.oidc.user; next();});
 
 app.use('/', router);
 
