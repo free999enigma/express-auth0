@@ -20,7 +20,8 @@ app.use(express.json());
 const config = {
   authRequired: false,
   auth0Logout: true,
-  baseURL: process.env.BASE_URL // Ensure BASE_URL is set
+  baseURL: process.env.BASE_URL || 'http://localhost:3000' // Ensure this is set
+
 };
 
 // Base URL fallback for development
