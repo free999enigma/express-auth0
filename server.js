@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const express = require('express');
 const logger = require('morgan');
 const path = require('path');
-const router = require('./routes/index');
+const router = require('../routes/index');
 const { auth } = require('express-openid-connect');
 
 // Load environment variables
