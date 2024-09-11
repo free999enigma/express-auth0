@@ -47,6 +47,10 @@ console.time('Auth0 middleware setup');
 const config = {
   authRequired: false,               // Keep as it is
   auth0Logout: true,                 // Keep as it is
+  baseURL: process.env.BASE_URL,       // Base URL of your app
+  clientID: process.env.AUTH0_CLIENT_ID,             // Auth0 Client ID
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,  // Auth0 Issuer URL (e.g., https://your-tenant.auth0.com)
+  secret: process.env.AUTH0_CLIENT_SECRET,           // Auth0 Client Secret
 };
 console.log('Auth0 configuration initialized with authRequired: false and auth0Logout: true');
 try {
