@@ -31,9 +31,8 @@ const config = {
   authRequired: false,
   auth0Logout: true,
   baseURL: process.env.BASE_URL || 'http://localhost:3000',
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  secret: process.env.AUTH0_CLIENT_SECRET,
+  clientID: process.env.CLIENT_ID,
+  issuerBaseURL: process.env.ISSUER_BASE_URL,
 };
 
 app.use(auth(config));
@@ -73,7 +72,7 @@ app.use((err, req, res, next) => {
 
 // Only listen to the port in local development
 if (process.env.NODE_ENV !== 'production') {
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3001;
   app.listen(port, () => {
     console.log(`Server running locally at http://localhost:${port}`);
   });
