@@ -49,14 +49,24 @@ console.log('Auth0 middleware applied');
 // Middleware to make the `user` object available for all views
 app.use((req, res, next) => {
   console.log('Processing request for', req.url);
-  if (req.oidc && req.oidc.user) {
-    console.log(`Authenticated user: ${req.oidc.user.email}`);
+
+  // Check if req.oidc is available
+  if (req.oidc) {
+    if (req.oidc.user) {
+      console.log(`Authenticated user: ${req.oidc.user.email}`);
+    } else {
+      console.log('No authenticated user');
+    }
+    // Set the user object in locals
+    res.locals.user = req.oidc.user;
   } else {
-    console.log('No authenticated user');
+    console.log('req.oidc is undefined');
+    res.locals.user = null;
   }
-  res.locals.user = req.oidc.user;
+
   next();
 });
+
 
 // Main route handling
 app.use('/', router);
