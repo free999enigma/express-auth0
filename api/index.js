@@ -9,8 +9,8 @@ const { Redis } = require('@upstash/redis');
 // Load environment variables
 dotenv.config();
 
-// Create Upstash Redis client
-const redis = new Redis({
+// Initialize the Upstash Redis client
+const redisClient = new Redis({
   url: process.env.UPSTASH_REDIS_URL,  // Use the Upstash Redis URL from the environment variable
   token: process.env.UPSTASH_REDIS_TOKEN,  // Use the Upstash Redis token from the environment variable
 });
@@ -71,7 +71,7 @@ app.use(
   auth({
     idpLogout: true,
     backchannelLogout: {
-      store: new UpstashRedisStore(redis),  // Use the custom Upstash Redis store
+      store: new UpstashRedisStore(redisClient),  // Use the custom Upstash Redis store
     },
   })
 );
@@ -84,8 +84,8 @@ app.use(function (req, res, next) {
 
 // Example route to set and get data from Upstash
 app.get('/set-data', async (req, res) => {
-  await redis.set('foo', 'bar');  // Set a key-value pair in Upstash Redis
-  const data = await redis.get('foo');  // Get the value for the key 'foo'
+  await redisClient.set('foo', 'bar');  // Set a key-value pair in Upstash Redis
+  const data = await redisClient.get('foo');  // Get the value for the key 'foo'
   res.send(`Data from Upstash: ${data}`);
 });
 
