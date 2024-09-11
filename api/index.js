@@ -61,8 +61,8 @@ app.use(express.json());
 const config = { 
   authRequired: false,
   auth0Logout: true,
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+  clientID: process.env.AUTH0_CLIENT_ID,  // Ensure this is correctly set
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,  // Ensure this is correctly set
   baseURL: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
 };
 
@@ -70,6 +70,9 @@ const config = {
 app.use(
   auth({
     idpLogout: true,
+    clientID: config.clientID,  // Pass the clientID from the config
+    issuerBaseURL: config.issuerBaseURL,  // Pass the issuerBaseURL from the config
+    baseURL: config.baseURL,
     backchannelLogout: {
       store: new UpstashRedisStore(redisClient),  // Use the custom Upstash Redis store
     },
@@ -84,9 +87,13 @@ app.use(function (req, res, next) {
 
 // Example route to set and get data from Upstash
 app.get('/set-data', async (req, res) => {
-  await redisClient.set('foo', 'bar');  // Set a key-value pair in Upstash Redis
-  const data = await redisClient.get('foo');  // Get the value for the key 'foo'
-  res.send(`Data from Upstash: ${data}`);
+  try {
+    await redisClient.set('foo', 'bar');  // Set a key-value pair in Upstash Redis
+    const data = await redisClient.get('foo');  // Get the value for the key 'foo'
+    res.send(`Data from Upstash: ${data}`);
+  } catch (error) {
+    res.status(500).send(`Error interacting with Upstash Redis: ${error.message}`);
+  }
 });
 
 app.use('/', router);
