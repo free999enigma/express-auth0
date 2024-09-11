@@ -4,6 +4,7 @@ const logger = require('morgan');
 const path = require('path');
 const router = require('./routes/index');
 const { auth } = require('express-openid-connect');
+const serverless = require('serverless-http'); // Add serverless-http
 
 // Measure time for loading environment variables
 console.time('Load environment variables');
@@ -110,4 +111,5 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('Running on Vercel, no need to bind to a specific port');
 }
 
-module.exports = app; // Export the app for Vercel
+// Export the app as a serverless function for Vercel
+module.exports = process.env.NODE_ENV === 'production' ? serverless(app) : app;
