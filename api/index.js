@@ -15,6 +15,40 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_TOKEN,  // Use the Upstash Redis token from the environment variable
 });
 
+// Custom Redis Store for session management
+class UpstashRedisStore {
+  constructor(redisClient) {
+    this.client = redisClient;
+  }
+
+  async get(id, callback) {
+    try {
+      const session = await this.client.get(id);
+      callback(null, session ? JSON.parse(session) : null);
+    } catch (error) {
+      callback(error);
+    }
+  }
+
+  async set(id, session, callback) {
+    try {
+      await this.client.set(id, JSON.stringify(session));
+      callback(null);
+    } catch (error) {
+      callback(error);
+    }
+  }
+
+  async destroy(id, callback) {
+    try {
+      await this.client.del(id);
+      callback(null);
+    } catch (error) {
+      callback(error);
+    }
+  }
+}
+
 const app = express();
 
 app.set('views', path.join(__dirname, '../views'));
@@ -32,11 +66,13 @@ const config = {
   baseURL: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
 };
 
-// Use OpenID Connect authentication
+// Integrate custom Redis store with auth middleware
 app.use(
   auth({
-    idpLogout: true,  // Enable IDP logout
-    // Session management can be handled by express-openid-connect without RedisStore
+    idpLogout: true,
+    backchannelLogout: {
+      store: new UpstashRedisStore(redis),  // Use the custom Upstash Redis store
+    },
   })
 );
 
