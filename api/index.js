@@ -32,13 +32,13 @@ const config = {
   baseURL: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
 };
 
+// Use OpenID Connect authentication
 app.use(
-    auth({
-      session: {
-        store: new RedisStore({ client: redisClient }),
-      },
-    })
-  );
+  auth({
+    idpLogout: true,  // Enable IDP logout
+    // Session management can be handled by express-openid-connect without RedisStore
+  })
+);
 
 // Middleware to make the `user` object available for all views
 app.use(function (req, res, next) {
