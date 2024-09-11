@@ -33,11 +33,12 @@ const config = {
 };
 
 app.use(
-  auth({
-    idpLogout: true,
-    // Remove the RedisStore as Upstash does not require RedisStore
-  })
-);
+    auth({
+      session: {
+        store: new RedisStore({ client: redisClient }),
+      },
+    })
+  );
 
 // Middleware to make the `user` object available for all views
 app.use(function (req, res, next) {
