@@ -19,7 +19,7 @@ console.log(`AUTH0_CLIENT_SECRET: ${process.env.AUTH0_CLIENT_SECRET ? 'Set' : 'N
 
 // Measure time for setting up the port
 console.time('Check PORT');
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' || process.env.RUN_LOCALLY === 'true') {
   console.log(`PORT: ${process.env.PORT || 'Not Set'}`);
 } else {
   console.log('Running in production mode (Vercel)');
@@ -45,12 +45,12 @@ console.timeEnd('Set up view engine and static files');
 // Measure time for initializing Auth0
 console.time('Auth0 middleware setup');
 const config = {
-  authRequired: false,               // Keep as it is
-  auth0Logout: true,                 // Keep as it is
-  baseURL: process.env.BASE_URL,       // Base URL of your app
-  clientID: process.env.AUTH0_CLIENT_ID,             // Auth0 Client ID
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,  // Auth0 Issuer URL (e.g., https://your-tenant.auth0.com)
-  secret: process.env.AUTH0_CLIENT_SECRET,           // Auth0 Client Secret
+  authRequired: false,
+  auth0Logout: true,
+  baseURL: process.env.BASE_URL,
+  clientID: process.env.AUTH0_CLIENT_ID,
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+  secret: process.env.AUTH0_CLIENT_SECRET,
 };
 console.log('Auth0 configuration initialized with authRequired: false and auth0Logout: true');
 try {
@@ -103,17 +103,46 @@ app.use((err, req, res, next) => {
   console.timeEnd('Handle error');
 });
 
-// Measure time for setting up server in local development
-if (process.env.NODE_ENV !== 'production') {
-  const port = process.env.PORT || 3001;
+// Use a flag to differentiate between local and serverless environments
+const isServerless = process.env.VERCEL === '1' || process.env.SERVERLESS === 'true';
+
+// Run server for local development
+if (!isServerless) {
+  const port = process.env.PORT || 3005;
   console.time('Server startup');
-  app.listen(port, () => {
-    console.log(`Server running locally at http://localhost:${port}`);
+
+  const server = app.listen(port, () => {
+    console.log(`Server running locally at http://localhost:3005`);
     console.timeEnd('Server startup');
   });
+
+  // Error handling for server startup issues (like EADDRINUSE)
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Please use a different port.`);
+    } else {
+      console.error('Server error:', err);
+    }
+    process.exit(1); // Exit the process on error
+  });
 } else {
-  console.log('Running on Vercel, no need to bind to a specific port');
+  console.log('Running on Vercel or serverless platform');
 }
 
-// Export the app as a serverless function for Vercel
-module.exports = process.env.NODE_ENV === 'production' ? serverless(app) : app;
+console.log(`PORT: ${process.env.PORT}`);
+console.log(`RUN_LOCALLY: ${process.env.RUN_LOCALLY}`);
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+
+// Export the app as a serverless function for Vercel or local usage
+module.exports = isServerless ? serverless(app) : app;
+
+// Global error handlers
+process.on('uncaughtException', (err) => {
+  console.error('There was an uncaught exception:', err);
+  process.exit(1); // Exit the process after logging the error
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1); // Exit the process after logging the error
+});
