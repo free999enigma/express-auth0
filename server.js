@@ -8,35 +8,63 @@ const { auth } = require('express-openid-connect');
 // Load environment variables
 dotenv.config();
 console.log('Environment variables loaded');
-console.log(`BASE_URL: ${process.env.BASE_URL}`);
-console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`BASE_URL: ${process.env.BASE_URL || 'Not Set'}`);
+console.log(`NODE_ENV: ${process.env.NODE_ENV || 'Not Set'}`);
+console.log(`AUTH0_CLIENT_ID: ${process.env.AUTH0_CLIENT_ID || 'Not Set'}`);
+console.log(`AUTH0_ISSUER_BASE_URL: ${process.env.AUTH0_ISSUER_BASE_URL || 'Not Set'}`);
+console.log(`AUTH0_CLIENT_SECRET: ${process.env.AUTH0_CLIENT_SECRET ? 'Set' : 'Not Set'}`);
 
 // Avoid logging PORT in production (Vercel)
 if (process.env.NODE_ENV !== 'production') {
-  console.log(`PORT: ${process.env.PORT}`);
+  console.log(`PORT: ${process.env.PORT || 'Not Set'}`);
+} else {
+  console.log('Running in production mode (Vercel)');
 }
 
 const app = express();
 
 // Set up view engine
+console.log('Setting up view engine and views directory');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// Set up logger, static files, and JSON parser
 app.use(logger('dev'));
+console.log('Morgan logger initialized');
 app.use(express.static(path.join(__dirname, 'public')));
+console.log('Static file directory set to /public');
 app.use(express.json());
+console.log('JSON parser middleware initialized');
 
 // Auth0 configuration
 const config = {
-  authRequired: false,
-  auth0Logout: true,
+  authRequired: false,               // Keep as it is
+  auth0Logout: true,                 // Keep as it is
 };
+console.log('Auth0 configuration initialized with authRequired: false and auth0Logout: true');
 
-app.use(auth(config));
+// Initialize Auth0 middleware
+try {
+  app.use(auth(config));
+  console.log('Auth0 middleware initialized successfully');
+} catch (error) {
+  console.error('Error initializing Auth0 middleware:', error);
+}
 
 // Middleware to make the `user` object available for all views
-app.use(function (req, res, next) { res.locals.user = req.oidc.user; next();});
+app.use((req, res, next) => {
+  console.log(`Processing request for: ${req.url}`);
+  if (req.oidc && req.oidc.user) {
+    console.log(`Authenticated user: ${req.oidc.user.email}`);
+  } else {
+    console.log('No authenticated user');
+  }
+  res.locals.user = req.oidc ? req.oidc.user : null;
+  next();
+});
 
+// Route handling
+console.log('Router middleware initialized');
 app.use('/', router);
 
 // Error handling for 404
