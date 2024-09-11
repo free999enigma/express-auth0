@@ -100,4 +100,13 @@ if (require.main === module) {
   });
 }
 
+// Conditionally listen only in local development
+if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server running locally at http://localhost:${port}`);
+  });
+}
+
+
 module.exports = app; // Export the app for Vercel and local.js
