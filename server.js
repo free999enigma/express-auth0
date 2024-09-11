@@ -30,9 +30,6 @@ app.use(express.json());
 const config = {
   authRequired: false,
   auth0Logout: true,
-  baseURL: process.env.BASE_URL || 'http://localhost:3000',
-  clientID: process.env.CLIENT_ID,
-  issuerBaseURL: process.env.ISSUER_BASE_URL,
 };
 
 app.use(auth(config));
