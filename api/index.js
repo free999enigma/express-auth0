@@ -4,7 +4,12 @@ const logger = require('morgan');
 const path = require('path');
 const router = require('../routes/index');
 const { auth } = require('express-openid-connect');
+const { createClient } = require('redis');
+const RedisStore = require('connect-redis')(auth);
 
+// redis@v4
+let redisClient = createClient({ legacyMode: true });
+redisClient.connect();
 // Load environment variables
 dotenv.config();
 
@@ -25,7 +30,14 @@ const config = {
   baseURL: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
 };
 
-app.use(auth(config));
+app.use(
+    auth({
+      idpLogout: true,
+      backchannelLogout: {
+        store: new RedisStore({ client: redisClient }),
+      },
+    })
+  );
 
 // Middleware to make the `user` object available for all views
 app.use(function (req, res, next) {
