@@ -19,13 +19,13 @@ app.use(express.json());
 
 const config = {
   authRequired: false,
-  auth0Logout: true
+  auth0Logout: true,
+  baseURL: process.env.BASE_URL // Ensure BASE_URL is set
 };
 
-// Base URL configuration for Auth0
-const port = process.env.PORT || 3000;
-if (!config.baseURL && !process.env.BASE_URL && process.env.PORT && process.env.NODE_ENV !== 'production') {
-  config.baseURL = `http://localhost:${port}`;
+// Base URL fallback for development
+if (!config.baseURL && process.env.PORT && process.env.NODE_ENV !== 'production') {
+  config.baseURL = `http://localhost:${process.env.PORT || 3000}`;
 }
 
 app.use(auth(config));
