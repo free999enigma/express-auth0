@@ -1,4 +1,4 @@
-const app = require('../server.js'); // Adjust the path if needed
+const app = require('../server'); // Adjust the path to point to server.js
 const serverless = require('serverless-http');
 
-module.exports = serverless(app);
+module.exports = serverless(app); // Export the app wrapped in serverless-http for Vercel

@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const express = require('express');
 const logger = require('morgan');
 const path = require('path');
-const router = require('./routes/index'); // Adjust this path to where your routes are
+const router = require('./routes/index');
 const { auth } = require('express-openid-connect');
 
 // Load environment variables
@@ -20,13 +20,17 @@ app.use(express.json());
 const config = {
   authRequired: false,
   auth0Logout: true,
-  baseURL: process.env.BASE_URL || 'http://localhost:3000' // Ensure this is set
 };
+
+// Base URL fallback for development
+if (!config.baseURL && process.env.PORT && process.env.NODE_ENV !== 'production') {
+  config.baseURL = `http://localhost:${process.env.PORT || 3000}`;
+}
 
 app.use(auth(config));
 
 // Middleware to make the `user` object available for all views
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
   res.locals.user = req.oidc.user;
   next();
 });
@@ -34,13 +38,13 @@ app.use(function (req, res, next) {
 app.use('/', router);
 
 // Error handling
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
   const err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
 
-app.use(function (err, req, res, next) {
+app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.render('error', {
     message: err.message,
@@ -48,26 +52,12 @@ app.use(function (err, req, res, next) {
   });
 });
 
-console.log('BASE_URL:', process.env.BASE_URL);
-console.log('PORT:', process.env.PORT);
-
-// Handle uncaught exceptions and rejections
-process.on('uncaughtException', (err) => {
-  console.error('There was an uncaught error', err);
-  process.exit(1); // Optional, forces the app to exit
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// Conditionally listen if running locally
+// For local development, conditionally listen to the port
 if (require.main === module) {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running locally at http://localhost:${port}`);
   });
 }
 
-// Export as a Vercel-compatible function
-module.exports = app;
+module.exports = app; // Export the app for Vercel and local.js
