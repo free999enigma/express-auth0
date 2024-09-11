@@ -1,44 +1,63 @@
 const express = require('express');
 const router = express.Router();
 const { requiresAuth } = require('express-openid-connect');
-
-// middleware to validate the logout token
 const requiresValidLogoutToken = require('../middlewares/validateLogoutToken');
+const { Redis } = require('@upstash/redis');
 
-// helper function to delete user sessions
-const deleteUserSessions = require('../utils/sessions');
+// Initialize Upstash Redis client
+const redisClient = new Redis({
+  url: process.env.UPSTASH_REDIS_URL,
+  token: process.env.UPSTASH_REDIS_TOKEN,
+});
 
-// new route to receive backchannel logout tokens
-// must be configured in the Application -> Sessions tab 
+// Helper function to delete user sessions from Redis
+async function deleteUserSessions(sub, sid) {
+  try {
+    // Remove the session using the session ID (sid) from Redis
+    if (sid) {
+      await redisClient.del(`logout:${sid}`);
+      console.log(`Session with sid ${sid} deleted from Redis.`);
+    }
+
+    // Optionally remove the user's session status using the user ID (sub)
+    if (sub) {
+      await redisClient.del(`user:${sub}:logout`);
+      console.log(`Logout status for user ${sub} deleted from Redis.`);
+    }
+  } catch (error) {
+    console.error(`Failed to delete session for user ${sub} or sid ${sid}: ${error.message}`);
+  }
+}
+
+// Route to receive backchannel logout tokens
+// Must be configured in the Application -> Sessions tab 
 // in the Auth0 Management Dashboard
-router.post(
-  '/backchannel-logout',
-  requiresValidLogoutToken,
-  function (req, res, next) {
-    // at this point the logout token is valid, checked by requiresValidLogoutToken middleware
-    // you can access it from the request object: req.logoutToken
+router.post('/backchannel-logout', requiresValidLogoutToken, async function (req, res, next) {
+  try {
+    // At this point, the logout token is valid, checked by requiresValidLogoutToken middleware
+    // You can access it from the request object: req.logoutToken
 
-    // delete user session so the user gets logged out
-    deleteUserSessions(
-      req.app.locals.sessionStore,
-      req.logoutToken.sub,
-      req.logoutToken.sid
-    );
+    // Delete user session so the user gets logged out
+    await deleteUserSessions(req.logoutToken.sub, req.logoutToken.sid);
 
     res.sendStatus(200);
+  } catch (error) {
+    console.error(`Error handling backchannel logout: ${error.message}`);
+    res.sendStatus(500);
   }
-);
+});
+
 router.get('/', function (req, res, next) {
   res.render('index', {
     title: 'Auth0 Webapp sample Nodejs',
-    isAuthenticated: req.oidc.isAuthenticated()
+    isAuthenticated: req.oidc.isAuthenticated(),
   });
 });
 
 router.get('/profile', requiresAuth(), function (req, res, next) {
   res.render('profile', {
     userProfile: JSON.stringify(req.oidc.user, null, 2),
-    title: 'Profile page'
+    title: 'Profile page',
   });
 });
 
