@@ -1,6 +1,10 @@
 {
   "name": "auth0-express-webapp-sample",
-  "scripts": {},
+  "version": "1.0.0",
+  
+  "scripts": {
+    "start": "node api/index.js"
+  },
   "dependencies": {
     "debug": "~3.2.7",
     "dotenv": "^6.1.0",
