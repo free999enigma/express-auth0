@@ -4,14 +4,16 @@ const logger = require('morgan');
 const path = require('path');
 const router = require('../routes/index');
 const { auth } = require('express-openid-connect');
-const { createClient } = require('redis');
-const RedisStore = require('connect-redis')(auth);
+const { Redis } = require('@upstash/redis');
 
-// redis@v4
-let redisClient = createClient({ legacyMode: true });
-redisClient.connect();
 // Load environment variables
 dotenv.config();
+
+// Create Upstash Redis client
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_URL,  // Use the Upstash Redis URL from the environment variable
+  token: process.env.UPSTASH_REDIS_TOKEN,  // Use the Upstash Redis token from the environment variable
+});
 
 const app = express();
 
@@ -20,29 +22,34 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(express.json()); 
+app.use(express.json());
 
 const config = {
   authRequired: false,
   auth0Logout: true,
   clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL:process.env.AUTH0_ISSUER_BASE_URL,
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
   baseURL: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
 };
 
 app.use(
-    auth({
-      idpLogout: true,
-      backchannelLogout: {
-        store: new RedisStore({ client: redisClient }),
-      },
-    })
-  );
+  auth({
+    idpLogout: true,
+    // Remove the RedisStore as Upstash does not require RedisStore
+  })
+);
 
 // Middleware to make the `user` object available for all views
 app.use(function (req, res, next) {
   res.locals.user = req.oidc.user;
   next();
+});
+
+// Example route to set and get data from Upstash
+app.get('/set-data', async (req, res) => {
+  await redis.set('foo', 'bar');  // Set a key-value pair in Upstash Redis
+  const data = await redis.get('foo');  // Get the value for the key 'foo'
+  res.send(`Data from Upstash: ${data}`);
 });
 
 app.use('/', router);
@@ -59,7 +66,7 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.render('error', {
     message: err.message,
-    error: process.env.NODE_ENV !== 'production' ? err : {}
+    error: process.env.NODE_ENV !== 'production' ? err : {},
   });
 });
 
