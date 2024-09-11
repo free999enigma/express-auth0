@@ -1,11 +1,5 @@
 const jose = require('jose');
-const { Redis } = require('@upstash/redis');
-
-// Initialize the Upstash Redis client
-const redisClient = new Redis({
-  url: process.env.UPSTASH_REDIS_URL,
-  token: process.env.UPSTASH_REDIS_TOKEN,
-});
+const redisClient = require('../utils/redisClient');  // Import the common Redis client
 
 async function requiresValidLogoutToken(req, res, next) {
   const JWKS = jose.createRemoteJWKSet(
@@ -32,7 +26,6 @@ async function requiresValidLogoutToken(req, res, next) {
     }
 
     // Verify that the logout token contains an events claim
-    // whose value is a JSON object containing the member name http://schemas.openid.net/event/backchannel-logout
     if (!payload.events['http://schemas.openid.net/event/backchannel-logout']) {
       return res.status(400).send('Error: Logout token must contain events claim with correct schema');
     }
@@ -44,19 +37,16 @@ async function requiresValidLogoutToken(req, res, next) {
 
     // Store the logout event in Upstash Redis (optional)
     if (payload.sid) {
-      // Store the session ID in Redis to track the logout event
       await redisClient.set(`logout:${payload.sid}`, 'true');
     }
 
     if (payload.sub) {
-      // Optionally, you could maintain a record of the user's logout status
       await redisClient.set(`user:${payload.sub}:logout`, 'true');
     }
 
-    // attach valid logout token to request object
+    // Attach valid logout token to request object
     req.logoutToken = payload;
 
-    // token is valid, call next middleware
     next();
   } catch (error) {
     res.status(400).send(`Error: ${error.message}`);

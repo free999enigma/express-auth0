@@ -4,16 +4,10 @@ const logger = require('morgan');
 const path = require('path');
 const router = require('../routes/index');
 const { auth } = require('express-openid-connect');
-const { Redis } = require('@upstash/redis');
+const redisClient = require('../utils/redisClient');  // Import the common Redis client
 
 // Load environment variables
 dotenv.config();
-
-// Initialize the Upstash Redis client
-const redisClient = new Redis({
-  url: process.env.UPSTASH_REDIS_URL,  // Use the Upstash Redis URL from the environment variable
-  token: process.env.UPSTASH_REDIS_TOKEN,  // Use the Upstash Redis token from the environment variable
-});
 
 // Custom Redis Store for session management
 class UpstashRedisStore {
@@ -115,3 +109,4 @@ app.use(function (err, req, res, next) {
 });
 
 module.exports = app;
+    
