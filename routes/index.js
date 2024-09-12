@@ -40,7 +40,7 @@ router.post('/backchannel-logout', requiresValidLogoutToken, async function (req
     console.error(`Error handling backchannel logout: ${error.message}`);
     res.sendStatus(500);
   }
-});
+}); 
 
 router.get('/', function (req, res, next) {
   res.render('index', {
