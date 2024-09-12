@@ -23,39 +23,37 @@ async function deleteUserSessions(sub, sid) {
   }
 }
 
-// The rest of your code remains unchanged...
+// Route to receive backchannel logout tokens
+// Must be configured in the Application -> Sessions tab 
+// in the Auth0 Management Dashboard
+router.post('/backchannel-logout', requiresValidLogoutToken, async function (req, res, next) {
+  try {
+    // At this point, the logout token is valid, checked by requiresValidLogoutToken middleware
+    // You can access it from the request object: req.logoutToken
+    const { sub, sid } = req.logoutToken;
 
+    // Delete user session so the user gets logged out
+    await deleteUserSessions(sub, sid);
 
-  // Route to receive backchannel logout tokens
-  // Must be configured in the Application -> Sessions tab 
-  // in the Auth0 Management Dashboard
-  router.post('/backchannel-logout', requiresValidLogoutToken, async function (req, res, next) {
-    try {
-      // At this point, the logout token is valid, checked by requiresValidLogoutToken middleware
-      // You can access it from the request object: req.logoutToken
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(`Error handling backchannel logout: ${error.message}`);
+    res.sendStatus(500);
+  }
+});
 
-      // Delete user session so the user gets logged out
-      await deleteUserSessions(req.logoutToken.sub, req.logoutToken.sid);
-
-      res.sendStatus(200);
-    } catch (error) {
-      console.error(`Error handling backchannel logout: ${error.message}`);
-      res.sendStatus(500);
-    }
+router.get('/', function (req, res, next) {
+  res.render('index', {
+    title: 'Auth0 Webapp sample Nodejs',
+    isAuthenticated: req.oidc.isAuthenticated(),
   });
+});
 
-  router.get('/', function (req, res, next) {
-    res.render('index', {
-      title: 'Auth0 Webapp sample Nodejs',
-      isAuthenticated: req.oidc.isAuthenticated(),
-    });
+router.get('/profile', requiresAuth(), function (req, res, next) {
+  res.render('profile', {
+    userProfile: JSON.stringify(req.oidc.user, null, 2),
+    title: 'Profile page',
   });
+});
 
-  router.get('/profile', requiresAuth(), function (req, res, next) {
-    res.render('profile', {
-      userProfile: JSON.stringify(req.oidc.user, null, 2),
-      title: 'Profile page',
-    });
-  });
-
-  module.exports = router;
+module.exports = router;

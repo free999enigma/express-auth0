@@ -34,7 +34,7 @@ async function requiresValidLogoutToken(req, res, next) {
     }
 
     // Verify that the logout token contains an events claim
-    if (!payload.events['http://schemas.openid.net/event/backchannel-logout']) {
+    if (!payload.events || !payload.events['http://schemas.openid.net/event/backchannel-logout']) {
       console.log("Invalid logout token: Missing events claim with correct schema.");
       return res.status(400).send('Error: Logout token must contain events claim with correct schema');
     }
