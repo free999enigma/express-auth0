@@ -28,19 +28,21 @@ async function deleteUserSessions(sub, sid) {
 // in the Auth0 Management Dashboard
 router.post('/backchannel-logout', requiresValidLogoutToken, async function (req, res, next) {
   try {
-    // At this point, the logout token is valid, checked by requiresValidLogoutToken middleware
-    // You can access it from the request object: req.logoutToken
-    const { sub, sid } = req.logoutToken;
+    // Ensure req.logoutToken is valid
+    if (!req.logoutToken) {
+      console.error("No valid logout token in request.");
+      return res.status(400).send('No valid logout token.');
+    }
 
-    // Delete user session so the user gets logged out
+    const { sub, sid } = req.logoutToken;
     await deleteUserSessions(sub, sid);
- 
     res.sendStatus(200);
   } catch (error) {
     console.error(`Error handling backchannel logout: ${error.message}`);
     res.sendStatus(500);
   }
-}); 
+});
+
 
 router.get('/', function (req, res, next) {
   res.render('index', {
