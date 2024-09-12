@@ -58,6 +58,7 @@ const config = {
   clientID: process.env.AUTH0_CLIENT_ID,  // Ensure this is correctly set
   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,  // Ensure this is correctly set
   baseURL: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
+  idpLogout: true, // This enables logout functionality
 };
 
 // Integrate custom Redis store with auth middleware
