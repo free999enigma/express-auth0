@@ -34,7 +34,7 @@ router.post('/backchannel-logout', requiresValidLogoutToken, async function (req
 
     // Delete user session so the user gets logged out
     await deleteUserSessions(sub, sid);
-
+ 
     res.sendStatus(200);
   } catch (error) {
     console.error(`Error handling backchannel logout: ${error.message}`);
