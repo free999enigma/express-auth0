@@ -64,6 +64,7 @@ const config = {
 // Integrate custom Redis store with auth middleware
 app.use(
   auth({
+    connection: "New",
     idpLogout: true,
     clientID: config.clientID,  // Pass the clientID from the config
     issuerBaseURL: config.issuerBaseURL,  // Pass the issuerBaseURL from the config
